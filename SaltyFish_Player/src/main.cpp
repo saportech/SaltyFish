@@ -4,7 +4,7 @@
 #include "Player.h"
 #include "UI.h"
 
-//#define DEBUG 1
+#define DEBUG 1
 
 Game game;
 Com comm;

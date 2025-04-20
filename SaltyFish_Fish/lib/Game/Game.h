@@ -36,7 +36,6 @@ private:
     GameState _state;
     int _sensitivity;
     GameMode _gameMode;
-    bool playerInRange[5];
     friend class MyAdvertisedDeviceCallbacks; // Allow the callback class to access private members
     String getStateName(GameState state);
     String getGameModeName(GameMode mode);

@@ -4,6 +4,7 @@
 #include "Com.h"
 #include "Player.h"
 #include "UI.h"
+#include <deque>
 
 #define NUM_PLAYERS 10
 std::vector<int> playerIDs(NUM_PLAYERS);
@@ -23,6 +24,36 @@ unsigned long getRandomTime(unsigned long minTime, unsigned long maxTime);
 const char* getStateName(int state);
 const char* getGameStateName(GameState gameState);
 void loopAnalysis();
+
+class SoundQueue {
+    private:
+        std::deque<SOUND_TYPE> queue;
+        unsigned long lastSoundTime = 0;
+        const unsigned long soundDuration = 3000;
+    
+    public:
+        void enqueue(SOUND_TYPE soundID) {
+            queue.push_back(soundID);
+        }
+        
+        void enqueuePriority(SOUND_TYPE soundID) {
+            queue.push_front(soundID);
+        }
+        
+        void update(UI& ui) {
+            unsigned long now = millis();
+            if (now - lastSoundTime >= soundDuration) {
+                if (!queue.empty()) {
+                    SOUND_TYPE nextSound = queue.front();
+                    queue.pop_front();
+                    ui.playSound(nextSound);
+                    lastSoundTime = now;
+                }
+            }
+        }
+    };
+
+SoundQueue soundQueue;
 
 void setup() {
 
@@ -52,6 +83,8 @@ void setup() {
 void loop() {
 
     uiUpdate();
+
+    soundQueue.update(ui);
 
     brainStateMachine();
     
@@ -92,7 +125,7 @@ void brainStateMachine() {
     sendMessageToAllPlayers(game.getState());
 
     if (state != GREEN_LIGHT_DELAY) {
-        ui.updateLEDs(game.getState(),game.getGameMode(), players, NUM_PLAYERS);    
+        ui.updateLEDs(game.getState(),game.getGameMode(), players, NUM_PLAYERS, game.getSensitivity());   
     }
 
     if (pressedButton == END_GAME_PRESSED) {
@@ -107,12 +140,12 @@ void brainStateMachine() {
                 comm.resetMsg();
                 handleGameState(RED);
                 state = WAIT_FOR_MOVEMENT_DETECTION_DURING_RED_LIGHT;
-                nextChangeMillis = getRandomTime(4000, 10000); // Set a new random time
+                nextChangeMillis = getRandomTime(6000, 15000); // Set a new random time
             } else if (state == WAIT_FOR_MOVEMENT_DETECTION_DURING_RED_LIGHT) {
                 handleGameState(GREEN);
                 previousMillisGreenDelay = millis();
                 state = GREEN_LIGHT_DELAY;
-                nextChangeMillis = getRandomTime(8000, 12000); // Set a new random time
+                nextChangeMillis = getRandomTime(4000, 12000); // Set a new random time
             }
             previousMillis = millis();
         }
@@ -127,7 +160,8 @@ void brainStateMachine() {
             }
             if (establishRes == comm.brainId) {
                 Serial.println("Communication established with all players");
-                ui.playSound(ALL_PLAYERS_READY_SOUND);
+                //ui.playSound(ALL_PLAYERS_READY_SOUND);
+                soundQueue.enqueuePriority(ALL_PLAYERS_READY_SOUND);
                 state = START;
             }
             comm.resetMsg();
@@ -160,6 +194,27 @@ void brainStateMachine() {
             for (int i = 0; i < NUM_PLAYERS; i++) {
                 if (message.id_sender == players[i].getId() && message.player_status == CROSSED_FINISH_LINE && players[i].getStatus() == PLAYING) {
                     Serial.println("Player " + String(players[i].getId()) + " crossed finish line");
+                    if (players[i].getId() == 1) {
+                        soundQueue.enqueue(PLAYER_1_FINISH_SOUND);
+                    } else if (players[i].getId() == 2) {
+                        soundQueue.enqueue(PLAYER_2_FINISH_SOUND);
+                    } else if (players[i].getId() == 3) {
+                        soundQueue.enqueue(PLAYER_3_FINISH_SOUND);
+                    } else if (players[i].getId() == 4) {
+                        soundQueue.enqueue(PLAYER_4_FINISH_SOUND);
+                    } else if (players[i].getId() == 5) {
+                        soundQueue.enqueue(PLAYER_5_FINISH_SOUND);
+                    } else if (players[i].getId() == 6) {
+                        soundQueue.enqueue(PLAYER_6_FINISH_SOUND);
+                    } else if (players[i].getId() == 7) {
+                        soundQueue.enqueue(PLAYER_7_FINISH_SOUND);
+                    } else if (players[i].getId() == 8) {
+                        soundQueue.enqueue(PLAYER_8_FINISH_SOUND);
+                    } else if (players[i].getId() == 9) {
+                        soundQueue.enqueue(PLAYER_9_FINISH_SOUND);
+                    } else if (players[i].getId() == 10) {
+                        soundQueue.enqueue(PLAYER_10_FINISH_SOUND);
+                    }
                     players[i].setStatus(CROSSED_FINISH_LINE);
                 }
             }
@@ -175,13 +230,34 @@ void brainStateMachine() {
             for (int i = 0; i < NUM_PLAYERS; i++) {
                 if (message.id_sender == players[i].getId() && message.player_status == MOVED && players[i].getStatus() == PLAYING) {
                     Serial.println("Player " + String(players[i].getId()) + " moved during red light");
+                    if (players[i].getId() == 1) {
+                        soundQueue.enqueue(PLAYER_1_MOVED_SOUND);
+                    } else if (players[i].getId() == 2) {
+                        soundQueue.enqueue(PLAYER_2_MOVED_SOUND);
+                    } else if (players[i].getId() == 3) {
+                        soundQueue.enqueue(PLAYER_3_MOVED_SOUND);
+                    } else if (players[i].getId() == 4) {
+                        soundQueue.enqueue(PLAYER_4_MOVED_SOUND);
+                    } else if (players[i].getId() == 5) {
+                        soundQueue.enqueue(PLAYER_5_MOVED_SOUND);
+                    } else if (players[i].getId() == 6) {
+                        soundQueue.enqueue(PLAYER_6_MOVED_SOUND);
+                    } else if (players[i].getId() == 7) {
+                        soundQueue.enqueue(PLAYER_7_MOVED_SOUND);
+                    } else if (players[i].getId() == 8) {
+                        soundQueue.enqueue(PLAYER_8_MOVED_SOUND);
+                    } else if (players[i].getId() == 9) {
+                        soundQueue.enqueue(PLAYER_9_MOVED_SOUND);
+                    } else if (players[i].getId() == 10) {
+                        soundQueue.enqueue(PLAYER_10_MOVED_SOUND);
+                    }
                     players[i].setStatus(NOT_PLAYING);
                 }
             }
             comm.resetMsg();
             break;
         case GREEN_LIGHT_DELAY:
-            if (millis() - previousMillisGreenDelay >= 2000) {
+            if (millis() - previousMillisGreenDelay >= 100) {
                 state = GREEN_LIGHT;
             }
             break;
@@ -221,21 +297,26 @@ void handleGameState(GameState newGameState) {
     switch (game.getState()) {
         case GAME_BEGIN:
             Serial.print("Game begin");
-            ui.playSound(GAME_BEGIN_SOUND);
+            soundQueue.enqueuePriority(GAME_BEGIN_SOUND);
+            ui.setServo(SERVO_MODE::SERVO_GREEN);
+            //ui.playSound(GAME_BEGIN_SOUND);
             break;
         case RED:
             Serial.print("Red light");
-            ui.playSound(RED_LIGHT_SOUND);
-            ui.setServo(SERVO_MODE::FAST);
+            soundQueue.enqueuePriority(RED_LIGHT_SOUND);
+            //ui.playSound(RED_LIGHT_SOUND);
+            ui.setServo(SERVO_MODE::SERVO_RED);
             break;
         case GREEN:
             Serial.print("Green light");
-            ui.playSound(GREEN_LIGHT_SOUND);
-            ui.setServo(SERVO_MODE::SLOW);
+            soundQueue.enqueuePriority(GREEN_LIGHT_SOUND);
+            //ui.playSound(GREEN_LIGHT_SOUND);
+            ui.setServo(SERVO_MODE::SERVO_GREEN);
             break;
         case GAME_OVER:
             Serial.print("Game over");
-            ui.playSound(GAME_OVER_SOUND);
+            soundQueue.enqueuePriority(GAME_OVER_SOUND);
+            //ui.playSound(GAME_OVER_SOUND);
             break;
     }
 
@@ -244,57 +325,32 @@ void handleGameState(GameState newGameState) {
 
 void uiUpdate() {
     static unsigned long lastButtonPressMillis = 0;
-    static unsigned long firstPressMillis = 0;
-    static BUTTON_PRESSED lastPressedButton = NO_BUTTON_PRESSED;
     const unsigned long buttonCooldown = 200;
-    const unsigned long doublePressWindow = 5000; // 5 seconds
 
     pressedButton = ui.buttonPressed();
 
     if (millis() - lastButtonPressMillis >= buttonCooldown) {
         if (pressedButton == AUTO_MODE_PRESSED) {
-            game.setGameMode(INDIVIDUAL_AUTOMATIC);
-            Serial.println("Individual automatic mode");
-            lastButtonPressMillis = millis();
-        } else if (pressedButton == MANUAL_MODE_PRESSED) {
-            game.setGameMode(INDIVIDUAL_MANUAL);
-            Serial.println("Individual manual mode");
-            lastButtonPressMillis = millis();
-        } else if (pressedButton == SENSITIVITY_UP_PRESSED) {
-            game.setSensitivity(game.getSensitivity() + 1);
-            ui.printSensitivity(game.getSensitivity());
-            lastButtonPressMillis = millis();
-        } else if (pressedButton == SENSITIVITY_DOWN_PRESSED) {
-            game.setSensitivity(game.getSensitivity() - 1);
-            ui.printSensitivity(game.getSensitivity());
-            lastButtonPressMillis = millis();
-        } else if (pressedButton >= PLAYER_1_BUTTON_PRESSED && pressedButton <= PLAYER_5_BUTTON_PRESSED) {
-            int playerIndex = pressedButton - PLAYER_1_BUTTON_PRESSED;
-            if (playerIndex < NUM_PLAYERS) {
-                if (lastPressedButton == pressedButton && millis() - firstPressMillis <= doublePressWindow) {
-                    // Second press detected within 5 seconds
-                    Serial.println("Second press detected for Player " + String(playerIndex + 1) + ". Performing second action.");
-                    players[playerIndex].setStatus(PLAYING);
-                    ui.printSensitivity(game.getSensitivity());
-                    lastButtonPressMillis = millis();
-                    lastPressedButton = NO_BUTTON_PRESSED; // Reset after the second action
-                } else {
-                    // First press detected
-                    Serial.println("First press detected for Player " + String(playerIndex + 1) + ". Performing first action.");
-                    ui.printMessage("Revive\nPlayer?");
-                    //ui.printSensitivity(playerIndex + 1);  // Example first action, replace with your actual function
-                    firstPressMillis = millis();
-                    lastPressedButton = pressedButton;
-                    lastButtonPressMillis = millis();
-                }
+            if (game.getGameMode() == INDIVIDUAL_AUTOMATIC) {
+                game.setGameMode(INDIVIDUAL_MANUAL);
+            } else {
+                game.setGameMode(INDIVIDUAL_AUTOMATIC);
             }
+            GameMode currentMode = game.getGameMode();
+            Serial.print("Game mode: ");
+            Serial.println(currentMode == INDIVIDUAL_AUTOMATIC ? "INDIVIDUAL_AUTOMATIC" : "INDIVIDUAL_MANUAL");
+            lastButtonPressMillis = millis();
+        } else if (pressedButton == SENSITIVITY_CHANGE_PRESSED) {
+            game.setSensitivity(game.getSensitivity() + 1);//if larger than 3, set to 1
+            Serial.print("Sensitivity: ");
+            Serial.println(game.getSensitivity());
+
+            lastButtonPressMillis = millis();
         }
     }
 
-    // If 5 seconds have passed without a second press, reset the state
-    if (lastPressedButton != NO_BUTTON_PRESSED && millis() - firstPressMillis > doublePressWindow) {
-        ui.printSensitivity(game.getSensitivity());
-        lastPressedButton = NO_BUTTON_PRESSED;
+    if (game.getState() == GameState::RED) {
+        ui.setServo(SERVO_MODE::SERVO_SPECIAL);
     }
 
 
@@ -323,9 +379,7 @@ void resetValues(int resetType) {
 
     comm.resetMsg();
 
-    ui.updateLEDs(game.getState(), game.getGameMode(), players, NUM_PLAYERS);
-
-    ui.printSensitivity(game.getSensitivity());
+    ui.updateLEDs(game.getState(), game.getGameMode(), players, NUM_PLAYERS, game.getSensitivity());
     
 }
 

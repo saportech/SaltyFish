@@ -53,7 +53,8 @@ void Com::promiscuousCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
         const uint8_t* srcMac = ppkt->payload + 10; // Source MAC address is at offset 10
 
         // MAC address to match
-        const uint8_t targetMac[6] = {0x34, 0x5F, 0x45, 0x33, 0x5C, 0xD0};
+        const uint8_t targetMac[6] = {0x88, 0x13, 0xBF, 0x61, 0x84, 0xEC};//Finish stand's MAC
+        //const uint8_t targetMac[6] = {0x34, 0x5F, 0x45, 0x33, 0x5C, 0xD0}; //Brain's MAC
         // Compare the source MAC with the target MAC
         if (memcmp(srcMac, targetMac, 6) == 0) {
             int rssi = ppkt->rx_ctrl.rssi; // Get the RSSI

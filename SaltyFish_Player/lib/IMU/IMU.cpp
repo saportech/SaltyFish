@@ -29,9 +29,9 @@ void IMU::readSensorData(float* ax, float* ay, float* az, float* gx, float* gy, 
 
 bool IMU::isMovementDetected(int userThreshold) {
     //4000 almost every movement, 10000 medium, 15000 almost impossible to reach
-    //int threshold = map(userThreshold, 10, 1, 4000, 15000);
-    int threshold = 8000;
-    // Track time using millis()
+    int threshold = map(userThreshold, 3, 1, 4000, 15000);
+    //int threshold = 8000;
+
     static unsigned long lastSampleTime = 0;
     unsigned long currentTime = millis();
     #define SAMPLE_TIME 50

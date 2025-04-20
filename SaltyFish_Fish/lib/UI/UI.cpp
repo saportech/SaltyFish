@@ -1,15 +1,27 @@
 #include "UI.h"
 
-UI::UI() : display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET) {
-
-}
-
 void UI::setServo(SERVO_MODE mode) {
+    static unsigned long lastToggleTime = 0;
+    static unsigned long currentDelay = 0;
+
+    if (mode == SERVO_SPECIAL) {
+        unsigned long now = millis();
+        if (now - lastToggleTime >= currentDelay) {
+            lastToggleTime = now;
+            currentDelay = random(200, 1001); // random delay between 200ms and 1000ms
+
+            int halfway = (pulseMin + pulseMax) / 2;
+            int randomPulse = random(pulseMin, halfway + 1);  // random position between pulseMin and halfway
+            myServo.writeMicroseconds(randomPulse);
+        }
+        return;
+    }
+
     if (!servoCommandIssued) {
-        if (mode == FAST) {
-        myServo.writeMicroseconds(pulseMin);
-        } else if (mode == SLOW) {
-        myServo.writeMicroseconds(pulseMax);
+        if (mode == SERVO_RED) {
+            myServo.writeMicroseconds(pulseMin);
+        } else if (mode == SERVO_GREEN) {
+            myServo.writeMicroseconds(pulseMax);
         }
         servoCommandIssued = true;
     }
@@ -36,13 +48,6 @@ void UI::setupPinsAndSensors() {
         FastLED.show();
     }
 
-    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // 0x3C is the I2C address for the OLED
-        Serial.println(F("SSD1306 allocation failed"));
-    }
-
-    display.clearDisplay();
-    display.display();
-
     pinMode(SEL0, OUTPUT);
     pinMode(SEL1, OUTPUT);
     pinMode(SEL2, OUTPUT);
@@ -51,8 +56,6 @@ void UI::setupPinsAndSensors() {
 
     Serial2.begin(9600, SERIAL_8N1, 34, 12);
     setVolume(22);
-
-
 
 }
 
@@ -91,8 +94,26 @@ void UI::selectMuxChannel(int channel) {
     digitalWrite(SEL3, (channel & 0x08) ? HIGH : LOW);
 }
 
-void UI::updateLEDs(GameState gameState, GameMode gameMode, Player players[], int numPlayers) {
+void UI::updateLEDs(GameState gameState, GameMode gameMode, Player players[], int numPlayers, int sensitivity) {
     static unsigned long lastUpdateMillis = millis();
+
+    // Update sensitivity LED
+    switch (sensitivity)
+    {
+    case 1:
+        leds[SENSITIVITY_LED] = CRGB::Green;
+        break;
+    case 2:
+        leds[SENSITIVITY_LED] = CRGB::Purple;
+        break;
+    case 3:
+        leds[SENSITIVITY_LED] = CRGB::Red;
+        break;
+    default:
+        break;
+    }
+
+    leds[SENSITIVITY_LED].nscale8(BRIGHTNESS_SCALE);
 
     // Update player LEDs
     for (int i = 0; i < numPlayers; i++) {
@@ -144,6 +165,9 @@ void UI::updateLEDs(GameState gameState, GameMode gameMode, Player players[], in
     leds[GAME_STATE_LED] = gameStateColor;
     leds[GAME_STATE_LED].nscale8(BRIGHTNESS_SCALE); 
     
+    leds[GAME_STATE_LED_2] = gameStateColor;
+    leds[GAME_STATE_LED_2].nscale8(BRIGHTNESS_SCALE);
+
     // Update game mode LEDs
     switch (gameMode) {
         case INDIVIDUAL_AUTOMATIC:
@@ -186,6 +210,66 @@ void UI::playSound(SOUND_TYPE soundType) {
             break;
         case ALL_PLAYERS_READY_SOUND:
             executeCMD(0x0F, 0x01, 0x05);
+            break;
+        case PLAYER_1_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x06);
+            break;
+        case PLAYER_2_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x07);
+            break;
+        case PLAYER_3_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x08);
+            break;
+        case PLAYER_4_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x09);
+            break;
+        case PLAYER_5_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0A);
+            break;
+        case PLAYER_6_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0B);
+            break;
+        case PLAYER_7_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0C);
+            break;
+        case PLAYER_8_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0D);
+            break;
+        case PLAYER_9_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0E);
+            break;
+        case PLAYER_10_MOVED_SOUND:
+            executeCMD(0x0F, 0x01, 0x0F);
+            break;
+        case PLAYER_1_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x10);
+            break;
+        case PLAYER_2_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x11);
+            break;
+        case PLAYER_3_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x12);
+            break;
+        case PLAYER_4_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x13);
+            break;
+        case PLAYER_5_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x14);
+            break;
+        case PLAYER_6_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x15);
+            break;
+        case PLAYER_7_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x16);
+            break;
+        case PLAYER_8_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x17);
+            break;
+        case PLAYER_9_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x18);
+            break;
+        case PLAYER_10_FINISH_SOUND:
+            executeCMD(0x0F, 0x01, 0x19);
             break;
         default:
             Serial.println("Error in playSound(): Unknown sound type");
@@ -230,24 +314,3 @@ void UI::setVolume(int volume) {
     Serial.println("Volume set to: " + String(volume));
 }
 
-void UI::printSensitivity(int sensitivity) {
-    display.clearDisplay();
-    display.setTextSize(2);             // Normal 1:1 pixel scale
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(30, 15);             // Start at top-left corner
-    display.print("LEVEL:");
-    display.setCursor(60, 45);            // Move to next line
-    display.print(sensitivity);
-    display.display();
-}
-
-void UI::printMessage(String message) {
-    display.clearDisplay();
-    display.setTextSize(2);             // Normal 1:1 pixel scale
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(30, 15);             // Start at top-left corner
-    display.print(F("Revive"));
-    display.setCursor(30, 45);            // Move to next line
-    display.print("Player?");
-    display.display();
-}

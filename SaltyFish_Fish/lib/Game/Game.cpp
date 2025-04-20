@@ -6,7 +6,7 @@ Game::Game() {
 
 void Game::begin() {
     _state = PRE_GAME; // Initialize state as IDLE by default
-    _sensitivity = 9; // Initialize sensitivity as 5 by default
+    _sensitivity = 2; // Initialize sensitivity as 2 by default
     _gameMode = INDIVIDUAL_MANUAL; // Initialize game mode as INDIVIDUAL_MANUAL by default
     Serial.println("Game initialized with values: ");
     Serial.print("State: ");
@@ -30,8 +30,8 @@ void Game::setSensitivity(int sensitivity) {
 
     if (sensitivity < 1) {
         _sensitivity = 1;
-    } else if (sensitivity > 9) {
-        _sensitivity = 9;
+    } else if (sensitivity > 3) {
+        _sensitivity = 1;
     } else {
         _sensitivity = sensitivity;
     }
